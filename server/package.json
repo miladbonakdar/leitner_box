@@ -1,0 +1,38 @@
+{
+  "name": "lietner_box_server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node  --inspect=0.0.0.0:9229 server.js",
+    "prod": "NODE_ENV=production node server.js",
+    "test": "jest"
+  },
+  "author": "milad bonakdar",
+  "license": "ISC",
+  "dependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "chalk": "^4.1.0",
+    "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "lodash": "^4.17.20",
+    "mongoose": "^5.10.0",
+    "morgan": "^1.10.0",
+    "node-cron": "^2.0.3",
+    "passport": "^0.4.1",
+    "passport-jwt": "^4.0.0",
+    "passport-local": "^1.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.15.3",
+    "eslint-config-node": "^4.0.0",
+    "eslint-plugin-node": "^8.0.0",
+    "jest": "^23.6.0"
+  }
+}
