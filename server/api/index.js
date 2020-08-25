@@ -9,7 +9,7 @@ const errorHandler = require('./utils/expressErrorHandler');
 const customResponse = require('./utils/response');
 const appConfig = require('../app.config.js').get();
 
-const onServerStartedSuccessfuly = () => {
+const onServerStartedSuccessfully = () => {
     console.log(`Server is up and running on port ${appConfig.apiPortNumber}`);
 };
 
@@ -28,5 +28,5 @@ module.exports = app => {
     app.use('/api-v1/leitner', leitner);
     app.use(defaultRoute);
     app.use(errorHandler);
-    app.listen(appConfig.apiPortNumber, onServerStartedSuccessfuly);
+    app.listen(appConfig.apiPortNumber, onServerStartedSuccessfully);
 };
