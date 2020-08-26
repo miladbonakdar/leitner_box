@@ -1,16 +1,19 @@
 const express = require('express');
 const router = express.Router();
-
-router.get('/user', function (req, res) {
+const {checkAsync} = require('./utils/checkApifunctions');
+/**
+ * remove wrong answers from learning list
+ */
+router.post('/update-session', checkAsync(async (req, res) => {
     res.json({});
-});
+}));
 
-router.post('/login', function (req, res) {
+router.post('/new-session', checkAsync(async (req, res) => {
     res.json({});
-});
+}));
 
-router.post('/register', function (req, res) {
+router.get('/get-session-cards/:session', checkAsync(async (req, res) => {
     res.json({});
-});
+}));
 
 module.exports = router

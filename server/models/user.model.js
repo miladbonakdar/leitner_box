@@ -11,9 +11,9 @@ let userSchema = new Schema({
     name: {type: String, required: true},
     username: {type: String, required: true, unique: true},
     password: {type: String, required: true},
-    learned: [Schema.Types.ObjectID],
-    wantToLearn: [Schema.Types.ObjectID],
-    learning: [Schema.Types.ObjectID],
+    learned: [{type: Schema.Types.ObjectID, ref: 'card'}],
+    wantToLearn: [{type: Schema.Types.ObjectID, ref: 'card'}],
+    learning: [{type: Schema.Types.ObjectID, ref: 'card'}],
     box: {
         slotOne: [cardsBatchSchema],
         slotTwo: [cardsBatchSchema],
