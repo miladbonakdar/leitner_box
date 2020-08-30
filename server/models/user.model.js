@@ -2,9 +2,11 @@ const {Schema, model} = require('mongoose');
 const virtualId = require('./contracts/virtualId.contract');
 const {CardSchema} = require('./card.model');
 const bcrypt = require('bcryptjs');
+const slots = require('./slotNumbers')
 
 let cardsBatchSchema = new Schema({
     cards: [CardSchema],
+    id: {type: Number, default: 0, max: 29, min: 0},
 });
 
 let userSchema = new Schema({
@@ -14,16 +16,9 @@ let userSchema = new Schema({
     learned: [{type: Schema.Types.ObjectID, ref: 'card'}],
     wantToLearn: [{type: Schema.Types.ObjectID, ref: 'card'}],
     learning: [{type: Schema.Types.ObjectID, ref: 'card'}],
-    box: {
-        slotOne: [cardsBatchSchema],
-        slotTwo: [cardsBatchSchema],
-        slotFour: [cardsBatchSchema],
-        slotEight: [cardsBatchSchema],
-        slotFifteen: [cardsBatchSchema]
-    },
+    box: [cardsBatchSchema],
     session: {
-        sessionId: {type: Schema.Types.ObjectID},
-        lastSlot: {type: Number},
+        lastSlot: {type: Number, default: slots.zero, min: slots.zero, max: slots.slotFifteen},
         isOpen: {type: Boolean, default: false}
     }
 });

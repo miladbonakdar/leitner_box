@@ -13,7 +13,7 @@ router.get('/user', auth, function (req, res) {
 });
 
 router.post('/login', (req, res) => {
-    passport.authenticate('local', {session: false},  (err, user, info) => {
+    passport.authenticate('local', {session: false}, (err, user, info) => {
         if (err || !user) {
             res.echo(info.message, null, false, 401);
             return;
@@ -33,17 +33,13 @@ router.post('/register', checkAsync(async (req, res) => {
     userDto.learned = []
     userDto.wantToLearn = []
     userDto.learning = []
-    userDto.box = {
-        slotOne: [],
-        slotTwo: [],
-        slotFour: [],
-        slotEight: [],
-        slotFifteen: []
-    }
+    userDto.box = []
+
     userDto.session = {
         lastSlot: 0,
         isOpen: false
     }
+
     userDto.password = await bcrypt.hash(userDto.password, await bcrypt.genSalt(4));
     let user = new User(userDto);
     await user.save();

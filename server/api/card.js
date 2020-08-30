@@ -58,7 +58,7 @@ router.get('/suggestions/:size/:page', auth, checkAsync(async (req, res) => {
     const user = await User.findById(req.user.id);
     const size = Number(req.params.size)
     const page = Number(req.params.page)
-    const ignoreList = _.union(user.learning,user.learned,user.wantToLearn)
+    const ignoreList = _.union(user.learning, user.learned, user.wantToLearn)
     const cards = await CardModel.find({_id: {$nin: ignoreList}}, {}, {skip: size * page, limit: size})
     const total = await CardModel.countDocuments({_id: {$in: ignoreList}})
     res.success({
@@ -84,19 +84,9 @@ router.get('/:id', auth, checkAsync(async (req, res) => {
 router.put('/add-to-favorite/:id', auth, checkAsync(async (req, res) => {
     const cardId = req.params.id
     const found = await CardModel.countDocuments({_id: cardId})
-    if (!found) {
-        res.notFound()
-        return
-    }
-    const user = (await User.findById(req.user.id)).toJSON()
-    for (const card of user.wantToLearn) {
-        if (card.toString() === cardId) {
-            res.success(cardId)
-            return;
-        }
-    }
-    user.wantToLearn = _.union([cardId], user.wantToLearn)
-    await User.updateOne({_id: req.user.id}, {$set: user}).exec()
+    if (!found) return res.notFound()
+    await User.findByIdAndUpdate(req.user.id,
+        {$addToSet: {wantToLearn: cardId}}, {safe: true, useFindAndModify: false})
     res.success(cardId)
 }));
 
@@ -106,12 +96,9 @@ router.put('/add-to-favorite/:id', auth, checkAsync(async (req, res) => {
 router.delete('/remove-from-favorite/:id', auth, checkAsync(async (req, res) => {
     const cardId = req.params.id
     const found = await CardModel.countDocuments({_id: cardId})
-    if (!found) {
-        res.notFound()
-        return
-    }
+    if (!found) return res.notFound()
     await User.findByIdAndUpdate(req.user.id,
-        {$pull: {wantToLearn: {$in: [cardId]}}}, {safe: true, upsert: true, useFindAndModify: false})
+        {$pull: {wantToLearn: {$in: [cardId]}}}, {safe: true, useFindAndModify: false})
     res.success(cardId)
 }));
 
@@ -125,6 +112,21 @@ router.post('/', auth, checkAsync(async (req, res) => {
     cardModel.createdAt = new Date()
     await cardModel.save();
     res.success(cardModel);
+}));
+
+/**
+ * create a new card
+ * */
+router.post('/batch-create', auth, checkAsync(async (req, res) => {
+    const cardsArray = []
+    for (const card of req.body.cards) {
+        let cardModel = new CardModel(card);
+        cardModel.creator = req.user.id
+        cardModel.createdAt = new Date()
+        cardsArray.push(cardModel)
+    }
+    CardModel.collection.insert(cardsArray)
+    res.success(cardsArray);
 }));
 
 /**
