@@ -23,8 +23,11 @@ router.get('/learned/:size/:page', auth, checkAsync(async (req, res) => {
     const size = Number(req.params.size)
     const page = Number(req.params.page)
     const learned = user.learned
-    const cards = await CardModel.find({_id: {$in: learned}}, {}, {skip: size * page, limit: size})
-    const total = await CardModel.countDocuments({_id: {$in: learned}})
+    const [cards, total] = await Promise.all([CardModel.find({_id: {$in: learned}}, {}, {
+        skip: size * page,
+        limit: size
+    }),
+        CardModel.countDocuments({_id: {$in: learned}})])
     res.success({
         cards,
         total,
@@ -41,8 +44,11 @@ router.get('/learning/:size/:page', auth, checkAsync(async (req, res) => {
     const size = Number(req.params.size)
     const page = Number(req.params.page)
     const learning = user.learning
-    const cards = await CardModel.find({_id: {$in: learning}}, {}, {skip: size * page, limit: size})
-    const total = await CardModel.countDocuments({_id: {$in: learning}})
+    const [cards, total] = await Promise.all([CardModel.find({_id: {$in: learning}}, {}, {
+        skip: size * page,
+        limit: size
+    }),
+        CardModel.countDocuments({_id: {$in: learning}})])
     res.success({
         cards,
         total,
@@ -59,8 +65,11 @@ router.get('/suggestions/:size/:page', auth, checkAsync(async (req, res) => {
     const size = Number(req.params.size)
     const page = Number(req.params.page)
     const ignoreList = _.union(user.learning, user.learned, user.wantToLearn)
-    const cards = await CardModel.find({_id: {$nin: ignoreList}}, {}, {skip: size * page, limit: size})
-    const total = await CardModel.countDocuments({_id: {$in: ignoreList}})
+    const [cards, total] = await Promise.all([CardModel.find({_id: {$nin: ignoreList}}, {}, {
+        skip: size * page,
+        limit: size
+    }),
+        CardModel.countDocuments({_id: {$nin: ignoreList}})])
     res.success({
         cards,
         total,
@@ -76,6 +85,22 @@ router.get('/:id', auth, checkAsync(async (req, res) => {
     const cardId = req.params.id
     const card = await CardModel.findById(cardId);
     res.success(card);
+}));
+
+/**
+ * get one card
+ * */
+router.get('/list/:size/:page', auth, checkAsync(async (req, res) => {
+    const size = Number(req.params.size)
+    const page = Number(req.params.page)
+    const [cards, total] = await Promise.all([CardModel.find({}, {}, {skip: size * page, limit: size}),
+        CardModel.countDocuments({})])
+    res.success({
+        cards,
+        total,
+        page,
+        size
+    })
 }));
 
 /**

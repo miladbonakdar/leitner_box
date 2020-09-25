@@ -23,7 +23,7 @@ router.post('/login', (req, res) => {
             if (err) res.internalServerError(err);
 
             const token = jwt.sign(user, jwt_token, {expiresIn: '10d'});
-            res.success({user, token}, 'user loged in successfuly');
+            res.success({user, token}, 'user logged in successfully');
         });
     })(req, res);
 });

@@ -12,7 +12,7 @@ module.exports = () => {
         try {
             user = await User.findOne({username});
             if (!user) {
-                return done(null, false, {message: 'No user by that username'});
+                return done(null, false, {message: 'User cannot be found'});
             }
         } catch (e) {
             return done(e);
@@ -20,7 +20,7 @@ module.exports = () => {
 
         let match = await user.comparePassword(password);
         if (!match) {
-            return done(null, false, {message: 'Not a matching password'});
+            return done(null, false, {message: 'password is not correct'});
         }
         return done(null, {
             name: user.name,

@@ -1,11 +1,18 @@
 const {Schema, model} = require('mongoose');
 const virtualId = require('./contracts/virtualId.contract');
-const {CardSchema} = require('./card.model');
 const bcrypt = require('bcryptjs');
 const slots = require('./slotNumbers')
 
+
+let userCardSchema = new Schema({
+    front: {type: String, required: true, minlength: 2},
+    back: {type: String, required: true, minlength: 2},
+    creator: {type: Schema.Types.ObjectID, required: true},
+    createdAt: {type: Date, default: Date.now}
+});
+
 let cardsBatchSchema = new Schema({
-    cards: [CardSchema],
+    cards: [userCardSchema],
     id: {type: Number, default: 0, max: 29, min: 0},
 });
 
