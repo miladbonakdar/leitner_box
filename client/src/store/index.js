@@ -1,6 +1,6 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import {getUser} from './userLocalStorage'
+import {getUser as getUserFromApi} from '../gate'
 
 Vue.use(Vuex);
 
@@ -10,14 +10,24 @@ export default new Vuex.Store({
         loading: false
     },
     mutations: {
-        fillUser(state) {
-            if (!state.user) {
-                state.user = getUser()
-            }
-        },
         setLoading: (state, payload) => (state.loading = payload),
+        setUser: (state, user) => state.user = user
     },
-    actions: {},
+    actions: {
+        init({commit}, done) {
+            getUserFromApi()
+                .then(
+                    (res) => {
+                        commit("setUser", res)
+                        done()
+                    }
+                )
+                .catch(error => {
+                    console.log(error)
+                    done(error)
+                })
+        }
+    },
     modules: {},
     getters: {
         User(state) {

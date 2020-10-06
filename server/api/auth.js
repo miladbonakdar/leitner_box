@@ -8,9 +8,18 @@ const User = require('../models/user.model');
 const auth = require('./utils/passportAuthenticator');
 const jwt = require('jsonwebtoken');
 
-router.get('/user', auth, function (req, res) {
-    res.json(req.user);
-});
+router.get('/user', auth, checkAsync(async (req, res) => {
+    const user = (await User.findById(req.user.id)).toJSON();
+    res.json({
+        name: user.name,
+        username: user.username,
+        learnedCount: user.learned.length,
+        wantToLearnCount: user.wantToLearn.length,
+        learningCount: user.learning.length,
+        box: user.box,
+        session: user.session
+    });
+}));
 
 router.post('/login', (req, res) => {
     passport.authenticate('local', {session: false}, (err, user, info) => {

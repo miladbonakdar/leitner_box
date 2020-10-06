@@ -85,6 +85,10 @@ export function getCard(cardId) {
     return instance.get(`/api-v1/card/${cardId}`);
 }
 
+export function getCardsList(size, page) {
+    return instance.get(`/api-v1/card/list/${size}/${page}`);
+}
+
 export function createNewSession(data) {
     return instance.post('/api-v1/leitner/new-session', data);
 }

@@ -58,4 +58,8 @@
         background-color: whitesmoke;
         opacity: 0.6;
     }
+
+    .pointer {
+        cursor: pointer;
+    }
 </style>

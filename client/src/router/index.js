@@ -41,7 +41,6 @@ const routes = [
     ]
   },
   {
-    // not found handler
     path: "*",
     redirect : '/profile'
   }

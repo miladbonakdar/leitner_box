@@ -1,5 +1,8 @@
 <template>
-  <div></div>
+  <div class="p-5">
+    <h1 class="text-muted"># Suggestions</h1>
+    <hr>
+  </div>
 </template>
 
 <script>

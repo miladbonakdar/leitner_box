@@ -93,7 +93,8 @@ router.get('/:id', auth, checkAsync(async (req, res) => {
 router.get('/list/:size/:page', auth, checkAsync(async (req, res) => {
     const size = Number(req.params.size)
     const page = Number(req.params.page)
-    const [cards, total] = await Promise.all([CardModel.find({}, {}, {skip: size * page, limit: size}),
+    const [cards, total] = await Promise.all([
+        CardModel.find({}, {}, {skip: size * page, limit: size}).sort('-createdAt'),
         CardModel.countDocuments({})])
     res.success({
         cards,

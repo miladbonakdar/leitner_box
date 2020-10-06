@@ -4,6 +4,7 @@ import router from "./router";
 import store from "./store";
 import {BootstrapVue, IconsPlugin} from "bootstrap-vue";
 import Toasted from 'vue-toasted';
+import VueMoment from 'vue-moment';
 
 Vue.use(Toasted, {
     position: 'bottom-right',
@@ -31,8 +32,20 @@ Vue.toasted.register('handleError',
     }
 )
 
+Vue.toasted.register('success',
+    (body) => {
+        if(body.message)
+            return body.message
+        return "action completed successfully"
+    },
+    {
+        type : 'success',
+    }
+)
+
 Vue.use(BootstrapVue);
 Vue.use(IconsPlugin);
+Vue.use(VueMoment)
 
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
