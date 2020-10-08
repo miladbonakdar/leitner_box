@@ -5,7 +5,8 @@ module.exports = async (user, correctAnswers) => {
 
     const correctCardIds = correctAnswers.map(c => c.id)
     await User.updateOne({_id: id}, {
-        $addToSet: {learning: {$each: correctCardIds}}
+        $addToSet: {learning: {$each: correctCardIds}},
+        $pull: {wantToLearn: {$in: [correctCardIds]}}
     }).exec();
 
     const batchCards = {

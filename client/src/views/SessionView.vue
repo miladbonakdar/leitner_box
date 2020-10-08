@@ -1,7 +1,7 @@
 <template>
   <div class="p-5">
     <h1 class="text-muted"># Session</h1>
-    <hr>
+    <hr />
   </div>
 </template>
 <script>

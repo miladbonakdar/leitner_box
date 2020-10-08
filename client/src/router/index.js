@@ -42,13 +42,13 @@ const routes = [
   },
   {
     path: "*",
-    redirect : '/profile'
+    redirect: "/profile"
   }
 ];
 
 const router = new VueRouter({
   routes,
-  mode: 'history'
+  mode: "history"
 });
 
 export default router;

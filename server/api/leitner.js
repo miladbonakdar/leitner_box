@@ -1,6 +1,6 @@
-const express = require('express');
-const router = express.Router();
-const {checkAsync} = require('./utils/checkApifunctions');
+const express = require('express')
+const router = express.Router()
+const {checkAsync} = require('./utils/checkApifunctions')
 const auth = require('./utils/passportAuthenticator')
 const User = require('../models/user.model')
 const slots = require('../models/slotNumbers')
@@ -21,10 +21,10 @@ router.post('/update-session', auth, checkAsync(async (req, res) => {
         $set: {session, box},
         $addToSet: {wantToLearn: {$each: wrongCardIds}},
         $pull: {learning: {$in: wrongCardIds}}
-    }).exec();
+    }).exec()
     const data = await getSessionCards(req.user.id, {session, box})
     res.success(data)
-}));
+}))
 
 router.post('/new-session', auth, checkAsync(async (req, res) => {
     const {session, box} = (await User.findById(req.user.id)).toJSON()
@@ -47,16 +47,16 @@ router.post('/new-session', auth, checkAsync(async (req, res) => {
         if (box.length !== 1)
             session.lastSlot = slots.zero
 
-        await User.updateOne({_id: req.user.id}, {$set: {session}}).exec();
+        await User.updateOne({_id: req.user.id}, {$set: {session}}).exec()
     }
     const data = await getSessionCards(req.user.id, {session, box})
     res.success(data)
-}));
+}))
 
 router.get('/get-session-cards', auth, checkAsync(async (req, res) => {
     const data = await getSessionCards(req.user.id)
     res.success(data)
-}));
+}))
 
 async function getSessionCards(userId, user) {
     const {session, box} = user ? user : (await User.findById(userId)).toJSON()
@@ -64,22 +64,22 @@ async function getSessionCards(userId, user) {
     if (session.isOpen) {
         switch (session.lastSlot) {
             case slots.zero:
-                break;
+                break
             case slots.slotOne:
                 cards = [...(_.find(box, a => a.id === 0)).cards]
-                break;
+                break
             case slots.slotTwo:
                 cards = [...(_.find(box, a => a.id === 2)).cards]
-                break;
+                break
             case slots.slotFour:
                 cards = [...(_.find(box, a => a.id === 6)).cards]
-                break;
+                break
             case slots.slotEight:
                 cards = [...(_.find(box, a => a.id === 14)).cards]
-                break;
+                break
             case slots.slotFifteen:
                 cards = [...(_.find(box, a => a.id === 29)).cards]
-                break;
+                break
         }
     }
     return {

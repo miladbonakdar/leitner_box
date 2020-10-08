@@ -4,6 +4,7 @@ const auth = require('./utils/passportAuthenticator')
 const {checkAsync} = require('./utils/checkApifunctions')
 const {CardModel} = require('../models/card.model')
 const User = require('../models/user.model')
+const wordsJson = require('../assets/words.json')
 const _ = require('lodash')
 
 /**
@@ -103,7 +104,7 @@ router.get('/list/:size/:page', auth, checkAsync(async (req, res) => {
         cardsList.push(card)
     })
     res.success({
-        cards :cardsList,
+        cards: cardsList,
         total,
         page,
         size
@@ -158,8 +159,27 @@ router.post('/batch-create', auth, checkAsync(async (req, res) => {
         cardModel.createdAt = new Date()
         cardsArray.push(cardModel)
     }
-    CardModel.collection.insert(cardsArray)
+    await CardModel.collection.insert(cardsArray)
     res.success(cardsArray)
+}))
+
+/**
+ * create a new card
+ * */
+router.post('/load-from-json-file', auth, checkAsync(async (req, res) => {
+    if (!req.user.isAdmin) return res.accessDenied('just the admin can load the json file')
+    const cardsArray = []
+    for (const card of wordsJson) {
+        let cardModel = new CardModel({
+            front: card.word.toLowerCase(),
+            back: card.meaning + (card.example ? ' \nExample : ' + card.example : ''),
+        })
+        cardModel.creator = req.user.id
+        cardModel.createdAt = new Date()
+        cardsArray.push(cardModel)
+    }
+    await CardModel.collection.insert(cardsArray)
+    res.success('cards loaded successfully')
 }))
 
 /**
@@ -196,6 +216,20 @@ router.delete('/:id', auth, checkAsync(async (req, res) => {
             }
         }, {safe: true})
     res.success(card, 'card deleted successfully')
+}))
+
+/**
+ * delete a card
+ * */
+router.put('/know-the-card/:cardId', auth, checkAsync(async (req, res) => {
+    const card = await CardModel.findById(req.params.cardId)
+    if (!card)
+        return res.notFound()
+    await User.updateOne({_id: req.user.id}, {
+        $addToSet: {learned: {$each: [card.id]}},
+        $pull: {learning: {$in: [card.id]}, wantToLearn: {$in: [card.id]}}
+    }).exec()
+    res.success(card, 'card marked as learned')
 }))
 
 module.exports = router

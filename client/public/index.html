@@ -1,17 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
     <title><%= htmlWebpackPlugin.options.title %></title>
-  </head>
-  <body>
-    <noscript>
-      <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
-    </noscript>
-    <div id="app"></div>
-    <!-- built files will be auto injected -->
-  </body>
+</head>
+<body>
+<noscript>
+    <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled.
+        Please enable it to continue.</strong>
+</noscript>
+<div id="app"></div>
+<!-- built files will be auto injected -->
+<script>
+    window.addEventListener('load', () => {
+        let selectedVoice = window.speechSynthesis.getVoices().filter(v => v.voiceURI === 'Google UK English Female')[0];
+
+        function loadVoice() {
+            selectedVoice = window.speechSynthesis.getVoices().filter(v => v.voiceURI === 'Google UK English Female')[0];
+        }
+
+        window.toSpeech = function (text, rate = 1) {
+            if (!selectedVoice) loadVoice()
+
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(' '+ text)
+            msg.voice = selectedVoice
+            msg.rate = rate;
+            msg.pitch = 0;
+            window.speechSynthesis.speak(msg);
+        }
+    })
+</script>
+</body>
 </html>
