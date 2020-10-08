@@ -53,7 +53,7 @@
             <hr>
             <b-row class="mt-5">
 
-                <div class="col-md-6 col-sm-12 col-lg-4">
+                <div class="col-md-6 col-sm-12 mt-3">
 
                     <b-card>
                         <div slot="header" class="clearfix">
@@ -68,6 +68,9 @@
                                 show-empty
                                 empty-html="<h6>There is no item to show!</h6>"
                         >
+                            <template v-slot:cell(index)="data">
+                                {{data.index + 1}}
+                            </template>
                             <template v-slot:cell(front)="data">
                                 <b-badge variant="info">{{ data.value }}
                                 </b-badge>
@@ -78,11 +81,16 @@
                             <template v-slot:cell(createdAt)="data">
                                 <b-badge>{{ data.value | moment('YYYY-MM-DD') }}</b-badge>
                             </template>
+                            <template v-slot:cell(actions)="data">
+                                <b-badge class="mx-1 pointer" @click="removeFromFavorites(data.item.id)"
+                                         variant="warning">Remove from list?
+                                </b-badge>
+                            </template>
                         </b-table>
                     </b-card>
                 </div>
 
-                <div class="col-md-6 col-sm-12 col-lg-4">
+                <div class="col-md-6 col-sm-12 mt-3">
                     <b-card>
                         <div slot="header" class="clearfix">
                             <span class="align-middle"> <i class="fa fa-paw"></i>Cards you learned</span>
@@ -96,6 +104,9 @@
                                 show-empty
                                 empty-html="<h6>There is no item to show!</h6>"
                         >
+                            <template v-slot:cell(index)="data">
+                                {{data.index + 1}}
+                            </template>
                             <template v-slot:cell(front)="data">
                                 <b-badge variant="info">{{ data.value }}
                                 </b-badge>
@@ -119,7 +130,7 @@
                     </b-card>
                 </div>
 
-                <div class="col-md-6 col-sm-12 col-lg-4">
+                <div class="col-md-6 col-sm-12 mt-3">
                     <b-card>
                         <div slot="header" class="clearfix">
                             <span class="align-middle"> <i class="fa fa-paw"></i> Cards you are learning</span>
@@ -133,6 +144,9 @@
                                 show-empty
                                 empty-html="<h6>There is no item to show!</h6>"
                         >
+                            <template v-slot:cell(index)="data">
+                                {{data.index + 1}}
+                            </template>
                             <template v-slot:cell(front)="data">
                                 <b-badge variant="info">{{ data.value }}
                                 </b-badge>
@@ -155,6 +169,26 @@
                         </b-row>
                     </b-card>
                 </div>
+                <div class="col-md-6 col-sm-12 mt-3">
+                    <b-card>
+                        <b-form-group
+                                id="input-group-1"
+                                label="Admin secret:"
+                                label-for="input-1"
+                        >
+                            <b-form-input
+                                    id="input-1"
+                                    v-model="adminSecret"
+                                    type="password"
+                                    required
+                                    placeholder="Enter admin secret..."
+                            ></b-form-input>
+                        </b-form-group>
+                        <div>
+                            <b-button @click="approveAsAdmin" variant="primary">Approve!</b-button>
+                        </div>
+                    </b-card>
+                </div>
             </b-row>
 
         </div>
@@ -162,20 +196,24 @@
 </template>
 
 <script>
-    import {mapGetters, mapMutations} from "vuex";
-    import {getFavorites, getLearnedCards, getLearningCards} from '../gate'
+    import {mapActions, mapGetters, mapMutations} from "vuex";
+    import {getFavorites, getLearnedCards, getLearningCards, removeFromFavorites, approveAsAdmin} from '../gate'
+    import {removeUserData} from "../store/userLocalStorage";
 
     export default {
         name: "ProfileView",
         data() {
             return {
                 date: new Date(),
+                adminSecret: null,
                 favoritesList: {
                     items: [],
                     fields: [
+                        {key: 'index', label: 'Index'},
                         {key: 'front', label: 'Front'},
                         {key: 'back', label: 'Back'},
-                        {key: 'createdAt', label: 'Created At'}
+                        {key: 'createdAt', label: 'Created At'},
+                        {key: 'actions', label: 'Actions'}
                     ]
                 },
                 learnedList: {
@@ -184,6 +222,7 @@
                     total: 10,
                     items: [],
                     fields: [
+                        {key: 'index', label: 'Index'},
                         {key: 'front', label: 'Front'},
                         {key: 'back', label: 'Back'},
                         {key: 'createdAt', label: 'Created At'}
@@ -195,6 +234,7 @@
                     total: 10,
                     items: [],
                     fields: [
+                        {key: 'index', label: 'Index'},
                         {key: 'front', label: 'Front'},
                         {key: 'back', label: 'Back'},
                         {key: 'createdAt', label: 'Created At'}
@@ -211,6 +251,18 @@
             ...mapMutations({
                 setLoading: 'setLoading'
             }),
+            ...mapActions({
+                init: "init"
+            }),
+            approveAsAdmin() {
+                this.setLoading(true)
+                approveAsAdmin(this.adminSecret).then(res => {
+                    console.log(res)
+                    removeUserData();
+                    window.location.replace("/auth");
+                }).catch(e => this.$toasted.global.handleError(e))
+                    .finally(() => this.setLoading(false))
+            },
             getLearningList() {
                 this.setLoading(true)
                 getLearningCards().then(res => {
@@ -224,6 +276,14 @@
                 getLearnedCards.then(res => {
                     this.learnedList.items = res.data.cards
                     this.learnedList.total = res.data.total
+                }).catch(e => this.$toasted.global.handleError(e))
+                    .finally(() => this.setLoading(false))
+            },
+            getFavoritesList() {
+                this.setLoading(true)
+                getFavorites().then(res => {
+                    this.favoritesList.items = res.data.cards
+                    this.favoritesList.total = res.data.total
                 }).catch(e => this.$toasted.global.handleError(e))
                     .finally(() => this.setLoading(false))
             },
@@ -241,10 +301,29 @@
                         this.learnedList.total = learned.data.total
                     }).catch(e => this.$toasted.global.handleError(e))
                     .finally(() => this.setLoading(false))
+            },
+            removeFromFavorites(cardId) {
+                this.$toasted.show("Don't you want to learn this card?", {
+                    action: {
+                        text: 'Not any more!',
+                        onClick: (e, toastObject) => {
+                            this.setLoading(true)
+                            toastObject.goAway(0);
+                            removeFromFavorites(cardId)
+                                .then(res => {
+                                    this.$toasted.global.success(res)
+                                    this.getFavoritesList()
+                                })
+                                .catch(e => this.$toasted.global.handleError(e))
+                                .finally(() => this.setLoading(false))
+                        }
+                    },
+                })
             }
         },
         created() {
             this.loadAll()
+            this.init()
         }
     };
 </script>

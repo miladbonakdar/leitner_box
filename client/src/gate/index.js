@@ -41,6 +41,10 @@ export function getUser() {
     return instance.get('/api-v1/auth/user')
 }
 
+export function approveAsAdmin(secret) {
+    return instance.put(`/api-v1/auth/approve-as-admin/${secret}`);
+}
+
 export function getFavorites() {
     return instance.get('/api-v1/card/favorites')
 }

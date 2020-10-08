@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {checkAsync} = require('./utils/checkApifunctions');
 const passport = require('passport');
-const jwt_token = require('../app.config').get().jwt_secret;
+const {jwt_secret,adminSecret} = require('../app.config').get();
 const bcrypt = require('bcryptjs');
 const User = require('../models/user.model');
 const auth = require('./utils/passportAuthenticator');
@@ -31,7 +31,7 @@ router.post('/login', (req, res) => {
         req.login(user, {session: false}, err => {
             if (err) res.internalServerError(err);
 
-            const token = jwt.sign(user, jwt_token, {expiresIn: '10d'});
+            const token = jwt.sign(user, jwt_secret, {expiresIn: '10d'});
             res.success({user, token}, 'user logged in successfully');
         });
     })(req, res);
@@ -43,6 +43,7 @@ router.post('/register', checkAsync(async (req, res) => {
     userDto.wantToLearn = []
     userDto.learning = []
     userDto.box = []
+    userDto.isAdmin = false
 
     userDto.session = {
         lastSlot: 0,
@@ -52,6 +53,17 @@ router.post('/register', checkAsync(async (req, res) => {
     userDto.password = await bcrypt.hash(userDto.password, await bcrypt.genSalt(4));
     let user = new User(userDto);
     await user.save();
+    delete user.password
+    res.success(user, 'you have been registered');
+}));
+
+
+router.put('/approve-as-admin/:secret', auth, checkAsync(async (req, res) => {
+    const secret = req.params.secret
+    if (secret !== adminSecret) return res.badRequest('secret is incorrect')
+    const user = await User.findById(req.user.id)
+    user.isAdmin = true
+    user.save();
     delete user.password
     res.success(user, 'you have been registered');
 }));

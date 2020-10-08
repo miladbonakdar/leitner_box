@@ -1,25 +1,25 @@
-const express = require('express');
-const router = express.Router();
-const auth = require('./utils/passportAuthenticator');
-const {checkAsync} = require('./utils/checkApifunctions');
-const {CardModel} = require('../models/card.model');
-const User = require('../models/user.model');
-const _ = require('lodash');
+const express = require('express')
+const router = express.Router()
+const auth = require('./utils/passportAuthenticator')
+const {checkAsync} = require('./utils/checkApifunctions')
+const {CardModel} = require('../models/card.model')
+const User = require('../models/user.model')
+const _ = require('lodash')
 
 /**
  * get user favorites
  * */
 router.get('/favorites', auth, checkAsync(async (req, res) => {
     const user = await User.findById(req.user.id)
-        .populate('wantToLearn').exec();
-    res.success(user.wantToLearn);
-}));
+        .populate('wantToLearn').exec()
+    res.success(user.wantToLearn)
+}))
 
 /**
  * get user learned cards
  * */
 router.get('/learned/:size/:page', auth, checkAsync(async (req, res) => {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id)
     const size = Number(req.params.size)
     const page = Number(req.params.page)
     const learned = user.learned
@@ -33,14 +33,14 @@ router.get('/learned/:size/:page', auth, checkAsync(async (req, res) => {
         total,
         page,
         size
-    });
-}));
+    })
+}))
 
 /**
  * get user learned cards
  * */
 router.get('/learning/:size/:page', auth, checkAsync(async (req, res) => {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id)
     const size = Number(req.params.size)
     const page = Number(req.params.page)
     const learning = user.learning
@@ -54,14 +54,14 @@ router.get('/learning/:size/:page', auth, checkAsync(async (req, res) => {
         total,
         page,
         size
-    });
-}));
+    })
+}))
 
 /**
  * explore new cards for user
  * */
 router.get('/suggestions/:size/:page', auth, checkAsync(async (req, res) => {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id)
     const size = Number(req.params.size)
     const page = Number(req.params.page)
     const ignoreList = _.union(user.learning, user.learned, user.wantToLearn)
@@ -76,16 +76,16 @@ router.get('/suggestions/:size/:page', auth, checkAsync(async (req, res) => {
         page,
         size
     })
-}));
+}))
 
 /**
  * get one card
  * */
 router.get('/:id', auth, checkAsync(async (req, res) => {
     const cardId = req.params.id
-    const card = await CardModel.findById(cardId);
-    res.success(card);
-}));
+    const card = await CardModel.findById(cardId)
+    res.success(card)
+}))
 
 /**
  * get one card
@@ -94,15 +94,21 @@ router.get('/list/:size/:page', auth, checkAsync(async (req, res) => {
     const size = Number(req.params.size)
     const page = Number(req.params.page)
     const [cards, total] = await Promise.all([
-        CardModel.find({}, {}, {skip: size * page, limit: size}).sort('-createdAt'),
+        CardModel.find({}, {}, {skip: size * page, limit: size}).populate('creator').sort('-createdAt'),
         CardModel.countDocuments({})])
+    const cardsList = []
+    cards.forEach(c => {
+        const card = c.toJSON()
+        card.canModify = req.user.isAdmin || card.creator.id === req.user.id
+        cardsList.push(card)
+    })
     res.success({
-        cards,
+        cards :cardsList,
         total,
         page,
         size
     })
-}));
+}))
 
 /**
  * add to favorite
@@ -114,7 +120,7 @@ router.put('/add-to-favorite/:id', auth, checkAsync(async (req, res) => {
     await User.findByIdAndUpdate(req.user.id,
         {$addToSet: {wantToLearn: cardId}}, {safe: true, useFindAndModify: false})
     res.success(cardId)
-}));
+}))
 
 /**
  * add to favorite
@@ -126,19 +132,20 @@ router.delete('/remove-from-favorite/:id', auth, checkAsync(async (req, res) => 
     await User.findByIdAndUpdate(req.user.id,
         {$pull: {wantToLearn: {$in: [cardId]}}}, {safe: true, useFindAndModify: false})
     res.success(cardId)
-}));
+}))
 
 /**
  * create a new card
  * */
 router.post('/', auth, checkAsync(async (req, res) => {
     const card = req.body
-    let cardModel = new CardModel(card);
+    card.front = card.front.toLowerCase()
+    let cardModel = new CardModel(card)
     cardModel.creator = req.user.id
     cardModel.createdAt = new Date()
-    await cardModel.save();
-    res.success(cardModel);
-}));
+    await cardModel.save()
+    res.success(cardModel)
+}))
 
 /**
  * create a new card
@@ -146,14 +153,14 @@ router.post('/', auth, checkAsync(async (req, res) => {
 router.post('/batch-create', auth, checkAsync(async (req, res) => {
     const cardsArray = []
     for (const card of req.body.cards) {
-        let cardModel = new CardModel(card);
+        let cardModel = new CardModel(card)
         cardModel.creator = req.user.id
         cardModel.createdAt = new Date()
         cardsArray.push(cardModel)
     }
     CardModel.collection.insert(cardsArray)
-    res.success(cardsArray);
-}));
+    res.success(cardsArray)
+}))
 
 /**
  * modify a card
@@ -165,21 +172,30 @@ router.put('/', auth, checkAsync(async (req, res) => {
             front: card.front,
             back: card.back,
         }
-    }).exec();
-    res.json(card);
-}));
+    }).exec()
+    res.json(card)
+}))
 
 /**
  * delete a card
  * */
 router.delete('/:id', auth, checkAsync(async (req, res) => {
-    const card = await CardModel.findById(req.params.id);
-    if (!card) {
-        res.notFound()
-        return
-    }
-    await card.remove();
-    res.success(card, 'card deleted successfully');
-}));
+    const card = await CardModel.findById(req.params.id)
+    if (!card)
+        return res.notFound()
+    const cardJson = card.toJSON()
+    if (cardJson.creator !== req.user.id && !req.user.isAdmin)
+        return res.accessDenied('just the owner and the admin can delete a card')
+    await card.remove()
+    await User.updateMany({},
+        {
+            $pull: {
+                wantToLearn: {$in: [card.id]}
+                , learning: {$in: [card.id]}
+                , learned: {$in: [card.id]}
+            }
+        }, {safe: true})
+    res.success(card, 'card deleted successfully')
+}))
 
 module.exports = router

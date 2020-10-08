@@ -6,7 +6,8 @@ const config = {
     mongoPass: process.env.MONGO_PASS,
     mongoServer: process.env.MONGO_SERVER,
     mongoPort: Number(process.env.MONGO_PORT),
-    jwt_secret: process.env.JWT_SECRET
+    jwt_secret: process.env.JWT_SECRET,
+    adminSecret: process.env.ADMIN_SECRET
 };
 
 module.exports = {

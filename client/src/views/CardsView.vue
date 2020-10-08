@@ -71,10 +71,15 @@
                 <template v-slot:cell(createdAt)="data">
                     <b-badge>{{ data.value | moment('YYYY-MM-DD') }}</b-badge>
                 </template>
+                <template v-slot:cell(creator)="data">
+                    <b-badge variant="info">{{ data.value.name }}</b-badge>
+                </template>
 
                 <template v-slot:cell(actions)="data">
-                    <b-badge class="mx-1 pointer" @click="selectForEdit(data.item)" variant="warning">Edit</b-badge>
-                    <b-badge class="mx-1 pointer" @click="removeCard(data.item.id)" variant="danger">Delete</b-badge>
+                    <b-badge v-if="data.item.canModify" class="mx-1 pointer" @click="selectForEdit(data.item)" variant="warning">Edit</b-badge>
+                    <b-badge v-if="data.item.canModify" class="mx-1 pointer" @click="removeCard(data.item.id)" variant="danger">Delete</b-badge>
+                    <b-badge v-if="!data.item.canModify" class="mx-1">You cannot modify!</b-badge>
+
                 </template>
             </b-table>
             <b-row v-show="cardsList.items.length" class="px-3">
@@ -113,6 +118,7 @@
                         {key: 'front', label: 'Front'},
                         {key: 'back', label: 'Back'},
                         {key: 'createdAt', label: 'Created At'},
+                        {key: 'creator', label: 'Created By'},
                         {key: 'actions', label: 'Actions'}
                     ]
                 }
@@ -141,11 +147,12 @@
             createCard() {
                 this.setLoading(true)
                 createNewCard(this.card)
-                    .then(res => this.$toasted.global.success(res))
-                    .catch(e => {
-                        this.$toasted.global.handleError(e)
+                    .then(res => {
+                        this.$toasted.global.success(res)
                         this.loadCards()
+                        this.onReset()
                     })
+                    .catch(e => this.$toasted.global.handleError(e))
                     .finally(() => this.setLoading(false))
             },
             updateCard() {

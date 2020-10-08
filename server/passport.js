@@ -26,6 +26,7 @@ module.exports = () => {
             name: user.name,
             username: user.username,
             id: user.id,
+            isAdmin: user.isAdmin
         });
     };
 

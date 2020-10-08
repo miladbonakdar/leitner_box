@@ -23,6 +23,7 @@ let userSchema = new Schema({
     learned: [{type: Schema.Types.ObjectID, ref: 'card'}],
     wantToLearn: [{type: Schema.Types.ObjectID, ref: 'card'}],
     learning: [{type: Schema.Types.ObjectID, ref: 'card'}],
+    isAdmin: {type: Boolean, default: false},
     box: [cardsBatchSchema],
     session: {
         lastSlot: {type: Number, default: slots.zero, min: slots.zero, max: slots.slotFifteen},

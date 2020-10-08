@@ -7,14 +7,14 @@
 
             <b-collapse id="nav-collapse" is-nav>
                 <b-navbar-nav class="ml-3">
-                    <b-nav-item>
-                        <b-link class="text-white" to="session">Session</b-link>
+                    <b-nav-item to="session">
+                        <span class="text-white">Session</span>
                     </b-nav-item>
-                    <b-nav-item>
-                        <b-link class="text-white" to="cards">Cards</b-link>
+                    <b-nav-item  to="cards">
+                        <span class="text-white">Cards</span>
                     </b-nav-item>
-                    <b-nav-item>
-                        <b-link class="text-white" to="suggest">Suggestions</b-link>
+                    <b-nav-item  to="suggest">
+                        <span class="text-white">Suggestions</span>
                     </b-nav-item>
                 </b-navbar-nav>
 
@@ -23,11 +23,12 @@
                     <b-nav-item-dropdown v-if="loaded" right>
                         <!-- Using 'button-content' slot -->
                         <template v-slot:button-content>
-                            <em>{{User.name}}</em>
+                            <span>{{User.name}}</span>
                         </template>
-                        <b-dropdown-item>
-                            <b-link class="text-muted w-100" to="profile">Profile</b-link>
-                        </b-dropdown-item>
+
+                            <b-dropdown-item to="profile">
+                                <span class="w-100">Profile</span>
+                            </b-dropdown-item>
                         <b-dropdown-item @click="signOut">Sign Out</b-dropdown-item>
                     </b-nav-item-dropdown>
                 </b-navbar-nav>
