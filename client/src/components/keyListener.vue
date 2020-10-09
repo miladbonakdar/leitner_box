@@ -1,24 +1,24 @@
 <template>
-    <div></div>
+  <div></div>
 </template>
 
 <script>
-    export default {
-        created() {
-            const component = this;
-            this.handler = function (e) {
-                component.$emit('keyup', e);
-            }
-            window.addEventListener('keyup', this.handler);
-        },
-        beforeDestroy() {
-            window.removeEventListener('keyup', this.handler);
-        }
-    }
+export default {
+  created() {
+    const component = this;
+    this.handler = function(e) {
+      component.$emit("keyup", e);
+    };
+    window.addEventListener("keyup", this.handler);
+  },
+  beforeDestroy() {
+    window.removeEventListener("keyup", this.handler);
+  }
+};
 </script>
 
 <style lang="css" scoped>
-    div {
-        display: none;
-    }
+div {
+  display: none;
+}
 </style>

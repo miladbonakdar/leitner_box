@@ -1,10 +1,10 @@
-const baseUrl = `${process.env.VUE_APP_SERVER_BASE_URL}/api-v1/public/sound/`
+const baseUrl = `${process.env.VUE_APP_SERVER_BASE_URL}/api-v1/public/sound/`;
 
 function soundUrl(sound) {
-    return baseUrl + sound
+  return baseUrl + sound;
 }
 
 export function playSound(sound) {
-    const audio = new Audio(soundUrl(sound));
-    return audio.play();
+  const audio = new Audio(soundUrl(sound));
+  return audio.play();
 }
