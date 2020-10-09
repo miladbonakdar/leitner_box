@@ -12,6 +12,7 @@
     "bootstrap": "^4.5.2",
     "bootstrap-vue": "^2.17.3",
     "core-js": "^3.6.5",
+    "debounce": "^1.2.0",
     "vue": "^2.6.12",
     "vue-loading-spinner": "^1.0.11",
     "vue-moment": "^4.1.0",

@@ -72,7 +72,6 @@
             <b-table
               small
               hover
-              fixed
               :items="favoritesList.items"
               :fields="favoritesList.fields"
               show-empty
@@ -123,7 +122,7 @@
                   "
                 >
                   <b-badge
-                    v-b-popover.hover="'See details'"
+                    v-b-popover.hover.top="'See details'"
                     variant="info"
                     class="mx-1"
                   >
@@ -145,17 +144,37 @@
             <b-table
               small
               hover
-              fixed
               :items="learningList.items"
               :fields="learningList.fields"
               show-empty
               empty-html="<h6>There is no item to show!</h6>"
             >
               <template v-slot:cell(front)="data">
-                <b-badge variant="info">{{ data.value }} </b-badge>
+                <span class="text-muted font-weight-bolder">
+                  {{ data.value }}
+                </span>
+                <b-icon
+                  @click="playCard(data.value, 0.8)"
+                  class="pointer mx-1"
+                  scale="1.5"
+                  icon="volume-up"
+                  variant="success"
+                ></b-icon>
+
+                <br />
+                <span class="font-italic" style="font-size: 8px">{{
+                  data.item.createdAt | moment("YYYY-MM-DD")
+                }}</span>
               </template>
               <template v-slot:cell(back)="data">
                 {{ data.value }}
+                <b-icon
+                  @click="playCard(data.value, 1)"
+                  class="pointer mx-1"
+                  scale="1.5"
+                  icon="volume-up"
+                  variant="success"
+                ></b-icon>
               </template>
             </b-table>
             <b-row v-show="learningList.items.length" class="px-3">
@@ -180,17 +199,37 @@
             <b-table
               small
               hover
-              fixed
               :items="learnedList.items"
               :fields="learnedList.fields"
               show-empty
               empty-html="<h6>There is no item to show!</h6>"
             >
               <template v-slot:cell(front)="data">
-                <b-badge variant="info">{{ data.value }} </b-badge>
+                <span class="text-muted font-weight-bolder">
+                  {{ data.value }}
+                </span>
+                <b-icon
+                  @click="playCard(data.value, 0.8)"
+                  class="pointer mx-1"
+                  scale="1.5"
+                  icon="volume-up"
+                  variant="success"
+                ></b-icon>
+
+                <br />
+                <span class="font-italic" style="font-size: 8px">{{
+                  data.item.createdAt | moment("YYYY-MM-DD")
+                }}</span>
               </template>
               <template v-slot:cell(back)="data">
                 {{ data.value }}
+                <b-icon
+                  @click="playCard(data.value, 1)"
+                  class="pointer mx-1"
+                  scale="1.5"
+                  icon="volume-up"
+                  variant="success"
+                ></b-icon>
               </template>
             </b-table>
             <b-row v-show="learnedList.items.length" class="px-3">
@@ -222,8 +261,8 @@
             </b-form-group>
             <div>
               <b-button @click="approveAsAdmin" variant="primary"
-                >Approve!</b-button
-              >
+                >Approve!
+              </b-button>
             </div>
           </b-card>
         </div>
@@ -302,9 +341,9 @@ export default {
         .catch(e => this.$toasted.global.handleError(e))
         .finally(() => this.setLoading(false));
     },
-    getLearningList() {
+    getLearningList(page) {
       this.setLoading(true);
-      getLearningCards()
+      getLearningCards(this.learningList.pageSize, page - 1)
         .then(res => {
           this.learningList.items = res.data.cards;
           this.learningList.total = res.data.total;
@@ -312,9 +351,9 @@ export default {
         .catch(e => this.$toasted.global.handleError(e))
         .finally(() => this.setLoading(false));
     },
-    getLearnedList() {
+    getLearnedList(page) {
       this.setLoading(true);
-      getLearnedCards
+      getLearnedCards(this.learnedList.pageSize, page - 1)
         .then(res => {
           this.learnedList.items = res.data.cards;
           this.learnedList.total = res.data.total;
@@ -326,8 +365,7 @@ export default {
       this.setLoading(true);
       getFavorites()
         .then(res => {
-          this.favoritesList.items = res.data.cards;
-          this.favoritesList.total = res.data.total;
+          this.favoritesList.items = res.data;
         })
         .catch(e => this.$toasted.global.handleError(e))
         .finally(() => this.setLoading(false));
@@ -335,9 +373,9 @@ export default {
     loadAll() {
       this.setLoading(true);
       Promise.all([
-        getLearnedCards(10, 0),
-        getLearningCards(10, 0),
-        getFavorites(10, 0)
+        getLearnedCards(this.learnedList.pageSize, 0),
+        getLearningCards(this.learningList.pageSize, 0),
+        getFavorites()
       ])
         .then(([learned, learning, favorite]) => {
           this.favoritesList.items = favorite.data;

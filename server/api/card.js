@@ -65,16 +65,45 @@ router.get('/suggestions/:size/:page', auth, checkAsync(async (req, res) => {
     const user = await User.findById(req.user.id)
     const size = Number(req.params.size)
     const page = Number(req.params.page)
+    const search = req.query.search && req.query.search.toLowerCase()
     const ignoreList = _.union(user.learning, user.learned, user.wantToLearn)
-    const [cards, total] = await Promise.all([CardModel.find({_id: {$nin: ignoreList}}, {}, {
-        skip: size * page,
-        limit: size
-    }),
-        CardModel.countDocuments({_id: {$nin: ignoreList}})])
+    const [cards, total] = await Promise.all([
+        CardModel.find({
+            _id: {$nin: ignoreList}
+            , ...(search && {front: {$regex: search, $options: "i"}})
+        }, {}, {
+            skip: size * page,
+            limit: size
+        }),
+        CardModel.countDocuments({
+            _id: {$nin: ignoreList}
+            , ...(search && {front: {$regex: search, $options: "i"}})
+        })])
     res.success({
         cards,
         total,
         page,
+        size
+    })
+}))
+
+
+/**
+ * explore new cards for user
+ * */
+router.get('/random-suggestions/:size', auth, checkAsync(async (req, res) => {
+    const user = await User.findById(req.user.id)
+    const size = Number(req.params.size)
+    const ignoreList = _.union(user.learning, user.learned, user.wantToLearn)
+    const cards = await CardModel.aggregate(
+        [{$match: {_id: {$nin: ignoreList}}},
+            {$sample: {size: size}}]
+    ).exec()
+    for (const card of cards) {
+        card.id = card._id
+    }
+    res.success({
+        cards,
         size
     })
 }))
@@ -94,9 +123,20 @@ router.get('/:id', auth, checkAsync(async (req, res) => {
 router.get('/list/:size/:page', auth, checkAsync(async (req, res) => {
     const size = Number(req.params.size)
     const page = Number(req.params.page)
+    const search = req.query.search && req.query.search.toLowerCase()
     const [cards, total] = await Promise.all([
-        CardModel.find({}, {}, {skip: size * page, limit: size}).populate('creator').sort('-createdAt'),
-        CardModel.countDocuments({})])
+        CardModel.find({
+            ...(search && {front: {$regex: search, $options: "i"}})
+        }, {}, {skip: size * page, limit: size}).populate('creator', {
+            name: true,
+            isAdmin: true,
+            username: true,
+            id: true,
+            _id: true
+        }).sort('-createdAt'),
+        CardModel.countDocuments({
+            ...(search && {front: {$regex: search, $options: "i"}})
+        })])
     const cardsList = []
     cards.forEach(c => {
         const card = c.toJSON()

@@ -24,9 +24,12 @@
 
         window.toSpeech = function (text, rate = 1) {
             if (!selectedVoice) loadVoice()
-
+            text = text.replace('(n.)', '')
+                .replace('(v.)', '')
+                .replace('(adj.)', '')
+                .trim()
             window.speechSynthesis.cancel();
-            const msg = new SpeechSynthesisUtterance(' '+ text)
+            const msg = new SpeechSynthesisUtterance(' ' + text)
             msg.voice = selectedVoice
             msg.rate = rate;
             msg.pitch = 0;

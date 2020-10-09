@@ -32,19 +32,19 @@ router.post('/new-session', auth, checkAsync(async (req, res) => {
     {
         session.isOpen = true
         session.lastSlot = slots.slotFifteen
-        if (box.length !== 30)
+        if (box.length < 30)
             session.lastSlot = slots.slotEight
 
-        if (box.length !== 15)
+        if (box.length < 15)
             session.lastSlot = slots.slotFour
 
-        if (box.length !== 7)
+        if (box.length < 7)
             session.lastSlot = slots.slotTwo
 
-        if (box.length !== 3)
+        if (box.length < 3)
             session.lastSlot = slots.slotOne
 
-        if (box.length !== 1)
+        if (box.length < 1)
             session.lastSlot = slots.zero
 
         await User.updateOne({_id: req.user.id}, {$set: {session}}).exec()
