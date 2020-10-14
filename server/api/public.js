@@ -5,8 +5,8 @@ const path = require('path');
 const fs = require('fs');
 
 router.get('/sound/:sound', checkAsync(async (req, res) => {
-    const sound = req.params.sound + '.mp3'
-    const soundPath = path.resolve(__baseDirname , 'assets', sound)
+    const sound = req.params.sound
+    const soundPath = path.resolve(__baseDirname, 'assets', sound)
     if (!fs.existsSync(soundPath))
         res.notFound('sound cannot be found. path:' + soundPath)
 

@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node  --inspect=0.0.0.0:9229 server.js",
     "prod": "NODE_ENV=production node server.js",
-    "test": "jest"
+    "test": "jest",
+    "start": "NODE_ENV=production node server.js"
   },
   "author": "milad bonakdar",
   "license": "ISC",
@@ -16,6 +17,7 @@
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "chalk": "^4.1.0",
+    "connect-history-api-fallback": "^1.6.0",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
@@ -27,7 +29,8 @@
     "node-cron": "^2.0.3",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
-    "passport-local": "^1.0.0"
+    "passport-local": "^1.0.0",
+    "serve-static": "^1.14.1"
   },
   "devDependencies": {
     "eslint": "^5.15.3",
