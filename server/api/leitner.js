@@ -19,7 +19,6 @@ router.post('/update-session', auth, checkAsync(async (req, res) => {
     const {box, session} = await sessionHandler(user.session.lastSlot)(user, correctAnswers, wrongAnswers)
     await User.updateOne({_id: req.user.id}, {
         $set: {session, box},
-        $addToSet: {wantToLearn: {$each: wrongCardIds}},
         $pull: {learning: {$in: wrongCardIds}}
     }).exec()
     const data = await getSessionCards(req.user.id, {session, box})

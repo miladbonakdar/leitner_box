@@ -14,7 +14,7 @@ require('./models/db/index')(async () => {
     const app = express()
     app.use(history())
     app.use(serveStatic(__dirname + "/client_dest"));
-    app.use(cors())
+    if (global.isDebugMode) app.use(cors())
     passport()
     api(app)
 })

@@ -6,16 +6,8 @@ const {CardModel} = require('../models/card.model')
 const User = require('../models/user.model')
 const wordsJson = require('../assets/words.json')
 const _ = require('lodash')
-
-/**
- * get user favorites
- * */
-router.get('/favorites', auth, checkAsync(async (req, res) => {
-    const user = await User.findById(req.user.id)
-        .populate('wantToLearn').exec()
-    res.success(user.wantToLearn)
-}))
-
+const {CategoryModel} = require("../models/category.model");
+const {mediumLvl, highLvl, lowLevel} = require('./utils/rateLimits')
 /**
  * get user learned cards
  * */
@@ -66,18 +58,20 @@ router.get('/suggestions/:size/:page', auth, checkAsync(async (req, res) => {
     const size = Number(req.params.size)
     const page = Number(req.params.page)
     const search = req.query.search && req.query.search.toLowerCase()
-    const ignoreList = _.union(user.learning, user.learned, user.wantToLearn)
+    const ignoreList = _.union(user.learning, user.learned)
     const [cards, total] = await Promise.all([
         CardModel.find({
-            _id: {$nin: ignoreList}
-            , ...(search && {front: {$regex: search, $options: "i"}})
+            _id: {$nin: ignoreList},
+            ...(user.selectedCategories && {'category.id': {$in: user.selectedCategories}}),
+            ...(search && {front: {$regex: search, $options: "i"}})
         }, {}, {
             skip: size * page,
             limit: size
         }),
         CardModel.countDocuments({
-            _id: {$nin: ignoreList}
-            , ...(search && {front: {$regex: search, $options: "i"}})
+            _id: {$nin: ignoreList},
+            ...(user.selectedCategories && {'category.id': {$in: user.selectedCategories}}),
+            ...(search && {front: {$regex: search, $options: "i"}})
         })])
     res.success({
         cards,
@@ -94,7 +88,7 @@ router.get('/suggestions/:size/:page', auth, checkAsync(async (req, res) => {
 router.get('/random-suggestions/:size', auth, checkAsync(async (req, res) => {
     const user = await User.findById(req.user.id)
     const size = Number(req.params.size)
-    const ignoreList = _.union(user.learning, user.learned, user.wantToLearn)
+    const ignoreList = _.union(user.learning, user.learned)
     const cards = await CardModel.aggregate(
         [{$match: {_id: {$nin: ignoreList}}},
             {$sample: {size: size}}]
@@ -151,35 +145,19 @@ router.get('/list/:size/:page', auth, checkAsync(async (req, res) => {
     })
 }))
 
-/**
- * add to favorite
- * */
-router.put('/add-to-favorite/:id', auth, checkAsync(async (req, res) => {
-    const cardId = req.params.id
-    const found = await CardModel.countDocuments({_id: cardId})
-    if (!found) return res.notFound()
-    await User.findByIdAndUpdate(req.user.id,
-        {$addToSet: {wantToLearn: cardId}}, {safe: true, useFindAndModify: false})
-    res.success(cardId)
-}))
-
-/**
- * add to favorite
- * */
-router.delete('/remove-from-favorite/:id', auth, checkAsync(async (req, res) => {
-    const cardId = req.params.id
-    const found = await CardModel.countDocuments({_id: cardId})
-    if (!found) return res.notFound()
-    await User.findByIdAndUpdate(req.user.id,
-        {$pull: {wantToLearn: {$in: [cardId]}}}, {safe: true, useFindAndModify: false})
-    res.success(cardId)
-}))
 
 /**
  * create a new card
  * */
-router.post('/', auth, checkAsync(async (req, res) => {
+router.post('/', auth, mediumLvl, checkAsync(async (req, res) => {
     const card = req.body
+    if (!card.categoryId)
+        return res.badRequest('category is not selected')
+    const category = await CategoryModel.findById(card.categoryId)
+    if (!category)
+        return res.notFound('category cannot be found')
+    delete card.categoryId
+    card.category = category.toJSON()
     card.front = card.front.toLowerCase()
     let cardModel = new CardModel(card)
     cardModel.creator = req.user.id
@@ -191,11 +169,17 @@ router.post('/', auth, checkAsync(async (req, res) => {
 /**
  * create a new card
  * */
-router.post('/batch-create', auth, checkAsync(async (req, res) => {
+router.post('/batch-create', highLvl, auth, checkAsync(async (req, res) => {
     const cardsArray = []
+    if (!req.body.categoryId) return res.badRequest('category is not selected')
+    const category = await CategoryModel.findById(req.body.categoryId)
+    if (!category)
+        return res.notFound('category cannot be found')
+    const catObject = category.toJSON()
     for (const card of req.body.cards) {
         let cardModel = new CardModel(card)
         cardModel.creator = req.user.id
+        cardModel.category = catObject
         cardModel.createdAt = new Date()
         cardsArray.push(cardModel)
     }
@@ -205,8 +189,9 @@ router.post('/batch-create', auth, checkAsync(async (req, res) => {
 
 /**
  * create a new card
+ * //TODO: change this section
  * */
-router.post('/load-from-json-file', auth, checkAsync(async (req, res) => {
+router.post('/load-from-json-file', highLvl, auth, checkAsync(async (req, res) => {
     if (!req.user.isAdmin) return res.accessDenied('just the admin can load the json file')
     const cardsArray = []
     for (const card of wordsJson) {
@@ -225,12 +210,15 @@ router.post('/load-from-json-file', auth, checkAsync(async (req, res) => {
 /**
  * modify a card
  * */
-router.put('/', auth, checkAsync(async (req, res) => {
+router.put('/', mediumLvl, auth, checkAsync(async (req, res) => {
     const card = req.body
     await CardModel.updateOne({_id: card.id}, {
         $set: {
             front: card.front,
             back: card.back,
+            synonyms: card.synonyms,
+            type: card.type,
+            example: card.example,
         }
     }).exec()
     res.json(card)
@@ -239,10 +227,9 @@ router.put('/', auth, checkAsync(async (req, res) => {
 /**
  * delete a card
  * */
-router.delete('/:id', auth, checkAsync(async (req, res) => {
+router.delete('/:id', mediumLvl, auth, checkAsync(async (req, res) => {
     const card = await CardModel.findById(req.params.id)
-    if (!card)
-        return res.notFound()
+    if (!card) return res.notFound()
     const cardJson = card.toJSON()
     if (cardJson.creator !== req.user.id && !req.user.isAdmin)
         return res.accessDenied('just the owner and the admin can delete a card')
@@ -250,8 +237,7 @@ router.delete('/:id', auth, checkAsync(async (req, res) => {
     await User.updateMany({},
         {
             $pull: {
-                wantToLearn: {$in: [card.id]}
-                , learning: {$in: [card.id]}
+                learning: {$in: [card.id]}
                 , learned: {$in: [card.id]}
             }
         }, {safe: true})
@@ -261,13 +247,12 @@ router.delete('/:id', auth, checkAsync(async (req, res) => {
 /**
  * delete a card
  * */
-router.put('/know-the-card/:cardId', auth, checkAsync(async (req, res) => {
+router.put('/know-the-card/:cardId', lowLevel, auth, checkAsync(async (req, res) => {
     const card = await CardModel.findById(req.params.cardId)
-    if (!card)
-        return res.notFound()
+    if (!card) return res.notFound()
     await User.updateOne({_id: req.user.id}, {
         $addToSet: {learned: {$each: [card.id]}},
-        $pull: {learning: {$in: [card.id]}, wantToLearn: {$in: [card.id]}}
+        $pull: {learning: {$in: [card.id]}}
     }).exec()
     res.success(card, 'card marked as learned')
 }))

@@ -3,6 +3,7 @@ const router = express.Router()
 const {checkAsync} = require('./utils/checkApifunctions')
 const path = require('path');
 const fs = require('fs');
+const languages = require('../models/languages.enum');
 
 router.get('/sound/:sound', checkAsync(async (req, res) => {
     const sound = req.params.sound
@@ -16,6 +17,10 @@ router.get('/sound/:sound', checkAsync(async (req, res) => {
     res.setHeader('Content-Length', stat.size)
 
     fs.createReadStream(soundPath).pipe(res);
+}))
+
+router.get('/languages', checkAsync(async (_, res) => {
+    res.success(languages)
 }))
 
 module.exports = router

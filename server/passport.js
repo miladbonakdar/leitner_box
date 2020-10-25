@@ -1,3 +1,5 @@
+import emailValidator from "./utils/emailValidator";
+
 const passport = require('passport')
 const passportJWT = require('passport-jwt')
 const User = require('./models/user.model')
@@ -10,7 +12,10 @@ module.exports = () => {
     const localStrategyMiddleware = async function (username, password, done) {
         let user
         try {
-            user = await User.findOne({username})
+            username = username.toLowerCase()
+            user = emailValidator(username) ?
+                await User.findOne({email: username}) :
+                await User.findOne({username})
             if (!user) {
                 return done(null, false, {message: 'User cannot be found'})
             }
