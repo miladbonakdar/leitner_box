@@ -1,4 +1,4 @@
-export default [
+module.exports = [
     "English",
     "Spanish",
     "Turkish",

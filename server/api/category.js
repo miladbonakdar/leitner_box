@@ -5,6 +5,7 @@ const auth = require('./utils/passportAuthenticator')
 const {CategoryModel} = require('../models/category.model')
 const {CardModel} = require('../models/card.model')
 const User = require('../models/user.model')
+const _ = require('lodash')
 
 router.post('/', auth, checkAsync(async (req, res) => {
     const cat = req.body
@@ -29,25 +30,24 @@ router.put('/', auth, checkAsync(async (req, res) => {
     const cat = await CategoryModel.findById(req.body.id)
     if (!cat) return res.notFound()
     const catJson = cat.toJSON()
-    if (catJson.creator !== req.user.id && !req.user.isAdmin)
+    if (catJson.creator.toString() !== req.user.id && !req.user.isAdmin)
         return res.accessDenied('just the owner and the admin can update a category')
     if (!catJson.isPrivate)
         return res.badRequest('public category cannot be updated')
     await CategoryModel.updateOne({_id: req.body.id}, {
         $set: {
-            name: req.body.name,
-            language: req.body.language,
+            name: req.body.name
         }
     }).exec()
     res.json(cat)
 }))
 
-router.delete('/:id', auth, checkAsync(async (_, res) => {
+router.delete('/:id', auth, checkAsync(async (req, res) => {
     const cat = await CategoryModel.findById(req.params.id)
     if (!cat)
         return res.notFound()
     const catJson = cat.toJSON()
-    if (catJson.creator !== req.user.id && !req.user.isAdmin)
+    if (catJson.creator.toString() !== req.user.id && !req.user.isAdmin)
         return res.accessDenied('just the owner and the admin can delete a category')
     if (!catJson.isPrivate)
         return res.badRequest('public category cannot be deleted')
@@ -85,7 +85,7 @@ router.get('/list/:size/:page', auth, checkAsync(async (req, res) => {
 }))
 
 router.get('/my-categories', auth, checkAsync(async (req, res) => {
-    const categories = CategoryModel.find({
+    const categories = await CategoryModel.find({
         creator: req.user.id
     }).populate('creator',
         {
@@ -140,8 +140,8 @@ router.get('/:id', auth, checkAsync(async (req, res) => {
         return res.notFound()
 
     const catJson = cat.toJSON()
-    const cards = CardModel.find({
-        'category.id': catJson.id
+    const cards = await CardModel.find({
+        'category.id': catJson._id.toString()
     })
 
     res.success({
@@ -171,7 +171,7 @@ router.put('/add-to-favorite/:id', auth, checkAsync(async (req, res) => {
  * */
 router.delete('/remove-from-favorite/:id', auth, checkAsync(async (req, res) => {
     const catId = req.params.id
-    const found = await CardModel.countDocuments({_id: catId})
+    const found = await CategoryModel.countDocuments({_id: catId})
     if (!found) return res.notFound()
     await User.findByIdAndUpdate(req.user.id,
         {$pull: {selectedCategories: {$in: [catId]}}}, {safe: true, useFindAndModify: false})
@@ -210,18 +210,18 @@ router.patch('/rate/:catId/:rate', auth, checkAsync(async (req, res) => {
     const cat = await CategoryModel.findById(req.params.catId)
     const rate = Number(req.params.rate)
     if (!cat) return res.notFound('category cannot be found')
-    let rating = cat.rating.filter(r => r.userId === req.user.id)[0]
-    if (!rating){
+    let rating = cat.rating.filter(r => r.userId.toString() === req.user.id)[0]
+    if (!rating) {
         rating = {
-            userId : req.user.id,
-            rate : rate
+            userId: req.user.id,
+            rate: rate
         }
         cat.rating.push(rating)
-    }else {
+    } else {
         rating.rate = rate
     }
     await cat.save()
-    return cat.toJSON()
+    res.success(cat.toJSON())
 }))
 
 module.exports = router

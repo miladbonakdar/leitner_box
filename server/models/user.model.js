@@ -1,5 +1,4 @@
-import emailValidator from "../utils/emailValidator";
-
+const emailValidator = require("../utils/emailValidator");
 const {Schema, model} = require('mongoose')
 const virtualId = require('./contracts/virtualId.contract')
 const bcrypt = require('bcryptjs')

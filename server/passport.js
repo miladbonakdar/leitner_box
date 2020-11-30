@@ -1,5 +1,4 @@
-import emailValidator from "./utils/emailValidator";
-
+const emailValidator = require("./utils/emailValidator");
 const passport = require('passport')
 const passportJWT = require('passport-jwt')
 const User = require('./models/user.model')

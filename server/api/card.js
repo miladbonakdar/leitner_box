@@ -231,7 +231,7 @@ router.delete('/:id', mediumLvl, auth, checkAsync(async (req, res) => {
     const card = await CardModel.findById(req.params.id)
     if (!card) return res.notFound()
     const cardJson = card.toJSON()
-    if (cardJson.creator !== req.user.id && !req.user.isAdmin)
+    if (cardJson.creator.toString() !== req.user.id && !req.user.isAdmin)
         return res.accessDenied('just the owner and the admin can delete a card')
     await card.remove()
     await User.updateMany({},

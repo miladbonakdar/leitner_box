@@ -1,7 +1,6 @@
 const config = {
     apiPortNumber: Number(process.env.API_PORT_NUMBER),
     databaseName: process.env.DATABASE_NAME,
-    loginEnabled: process.env.LOGIN_ENABLED == 'true',
     mongoUser: process.env.MONGO_USER,
     mongoPass: process.env.MONGO_PASS,
     mongoServer: process.env.MONGO_SERVER,
