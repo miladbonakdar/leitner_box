@@ -4,10 +4,10 @@ const auth = require('./utils/passportAuthenticator')
 const {checkAsync} = require('./utils/checkApifunctions')
 const {CardModel} = require('../models/card.model')
 const User = require('../models/user.model')
-const wordsJson = require('../assets/words.json')
 const _ = require('lodash')
 const {CategoryModel} = require("../models/category.model");
 const {mediumLvl, highLvl, lowLevel} = require('./utils/rateLimits')
+const jsonFilesLoaderAsync = require('./utils/jsonFilesLoader')
 /**
  * get user learned cards
  * */
@@ -156,6 +156,10 @@ router.post('/', auth, mediumLvl, checkAsync(async (req, res) => {
     const category = await CategoryModel.findById(card.categoryId)
     if (!category)
         return res.notFound('category cannot be found')
+
+    if (category.creator.toString() !== req.user.id)
+        return res.accessDenied('only the owner of the category can add a card to it')
+
     delete card.categoryId
     card.category = category.toJSON()
     card.front = card.front.toLowerCase()
@@ -175,6 +179,10 @@ router.post('/batch-create', highLvl, auth, checkAsync(async (req, res) => {
     const category = await CategoryModel.findById(req.body.categoryId)
     if (!category)
         return res.notFound('category cannot be found')
+
+    if (category.creator.toString() !== req.user.id)
+        return res.accessDenied('only the owner of the category can add a card to it')
+
     const catObject = category.toJSON()
     for (const card of req.body.cards) {
         let cardModel = new CardModel(card)
@@ -187,23 +195,24 @@ router.post('/batch-create', highLvl, auth, checkAsync(async (req, res) => {
     res.success(cardsArray)
 }))
 
-/**
- * create a new card
- * //TODO: change this section
- * */
-router.post('/load-from-json-file', highLvl, auth, checkAsync(async (req, res) => {
-    if (!req.user.isAdmin) return res.accessDenied('just the admin can load the json file')
-    const cardsArray = []
-    for (const card of wordsJson) {
-        let cardModel = new CardModel({
-            front: card.word.toLowerCase(),
-            back: card.meaning + (card.example ? ' \nExample : ' + card.example : ''),
-        })
+router.post('/load-from-json-files', highLvl, auth, checkAsync(async (req, res) => {
+    if (!req.user.isAdmin)
+        return res.accessDenied('just the admin can load json files')
+    await jsonFilesLoaderAsync(async (category) => {
+        let categoryModel = new CategoryModel(category)
+        categoryModel.creator = req.user.id
+        categoryModel.createdAt = new Date()
+        categoryModel.isPrivate = false
+        await categoryModel.save()
+        return categoryModel._id
+    }, async (card) => {
+        card.front = card.front.toLowerCase()
+        let cardModel = new CardModel(card)
         cardModel.creator = req.user.id
         cardModel.createdAt = new Date()
-        cardsArray.push(cardModel)
-    }
-    await CardModel.collection.insert(cardsArray)
+        await cardModel.save()
+        return cardModel._id
+    });
     res.success('cards loaded successfully')
 }))
 
@@ -211,6 +220,12 @@ router.post('/load-from-json-file', highLvl, auth, checkAsync(async (req, res) =
  * modify a card
  * */
 router.put('/', mediumLvl, auth, checkAsync(async (req, res) => {
+    const cardItem = await CardModel.findById(req.params.id)
+    if (!cardItem) return res.notFound()
+    const cardJson = cardItem.toJSON()
+    if (cardJson.creator.toString() !== req.user.id && !req.user.isAdmin)
+        return res.accessDenied('just the owner and the admin can update a card')
+
     const card = req.body
     await CardModel.updateOne({_id: card.id}, {
         $set: {
@@ -245,7 +260,7 @@ router.delete('/:id', mediumLvl, auth, checkAsync(async (req, res) => {
 }))
 
 /**
- * delete a card
+ * know the card
  * */
 router.put('/know-the-card/:cardId', lowLevel, auth, checkAsync(async (req, res) => {
     const card = await CardModel.findById(req.params.cardId)

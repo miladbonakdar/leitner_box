@@ -150,7 +150,6 @@ router.get('/:id', auth, checkAsync(async (req, res) => {
     })
 }))
 
-
 /**
  * add to favorite
  * */

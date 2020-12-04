@@ -3,6 +3,7 @@ const router = express.Router()
 const {checkAsync} = require('./utils/checkApifunctions')
 const auth = require('./utils/passportAuthenticator')
 const User = require('../models/user.model')
+const {CardModel} = require('../models/card.model')
 const slots = require('../models/slotNumbers')
 const sessionHandler = require('./sessionHandlers')
 const _ = require('lodash')
@@ -13,13 +14,13 @@ const _ = require('lodash')
 router.post('/update-session', auth, checkAsync(async (req, res) => {
     const {correctAnswers, wrongAnswers} = req.body
     const user = (await User.findById(req.user.id)).toJSON()
-    const wrongCardIds = wrongAnswers.map(c => c.id)
+    const correctCards = await CardModel.find({_id: {$in: correctAnswers}})
     if (!user.session.isOpen)
         return res.badRequest('you do not have an open session')
-    const {box, session} = await sessionHandler(user.session.lastSlot)(user, correctAnswers, wrongAnswers)
+    const {box, session} = await sessionHandler(user.session.lastSlot)(user, correctCards, wrongAnswers)
     await User.updateOne({_id: req.user.id}, {
         $set: {session, box},
-        $pull: {learning: {$in: wrongCardIds}}
+        $pull: {learning: {$in: wrongAnswers}}
     }).exec()
     const data = await getSessionCards(req.user.id, {session, box})
     res.success(data)
@@ -27,8 +28,7 @@ router.post('/update-session', auth, checkAsync(async (req, res) => {
 
 router.post('/new-session', auth, checkAsync(async (req, res) => {
     const {session, box} = (await User.findById(req.user.id)).toJSON()
-    if (!session.isOpen)
-    {
+    if (!session.isOpen) {
         session.isOpen = true
         session.lastSlot = slots.slotFifteen
         if (box.length < 30)

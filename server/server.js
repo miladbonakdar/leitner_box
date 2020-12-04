@@ -10,7 +10,7 @@ const api = require('./api/index')
 const cors = require('cors')
 const history = require('connect-history-api-fallback')
 
-require('./models/db/index')(async () => {
+require('./models/db/index')(() => {
     const app = express()
     app.use(history({htmlAcceptHeaders: ['text/html', 'application/xhtml+xml']}))
     app.use(serveStatic(__dirname + "/client_dest"));
