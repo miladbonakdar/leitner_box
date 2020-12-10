@@ -17,6 +17,7 @@ router.get('/user', auth, checkAsync(async (req, res) => {
         learnedCount: user.learned.length,
         selectedCategoriesCount: user.selectedCategories.length,
         learningCount: user.learning.length,
+        selectedCategories: user.selectedCategories,
         box: user.box,
         session: user.session
     })

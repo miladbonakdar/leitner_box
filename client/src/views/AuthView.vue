@@ -23,15 +23,29 @@
           </b-form-group>
 
           <b-form-group
-            id="register-group-2"
-            label="Your username:"
-            label-for="input-2"
+              id="register-group-2"
+              label="Your username:"
+              label-for="input-2"
           >
             <b-form-input
-              id="input-2"
-              v-model="form.register.username"
-              required
-              placeholder="Enter your username"
+                id="input-2"
+                v-model="form.register.username"
+                required
+                placeholder="Enter your username"
+            ></b-form-input>
+          </b-form-group>
+
+          <b-form-group
+              id="register-group-4"
+              label="Your email:"
+              label-for="input-2"
+          >
+            <b-form-input
+                id="input-4"
+                v-model="form.register.email"
+                required
+                type="email"
+                placeholder="Enter your email"
             ></b-form-input>
           </b-form-group>
 
@@ -97,7 +111,7 @@
               v-model="form.login.username"
               type="text"
               required
-              placeholder="Enter username"
+              placeholder="Enter username or email"
             ></b-form-input>
           </b-form-group>
 
@@ -132,7 +146,7 @@
 </template>
 
 <script>
-import { getToken, storeUserToken } from "../store/userLocalStorage";
+import { getToken, storeUserToken } from "@/store/userLocalStorage";
 import { login, register, updateInstance } from "../gate";
 import { mapMutations } from "vuex";
 
@@ -147,6 +161,7 @@ export default {
         register: {
           name: null,
           username: null,
+          email:null,
           password: null,
           rePassword: null
         },
@@ -175,6 +190,8 @@ export default {
         return this.$toasted.global.warn("please enter the password");
       if (!this.form.register.username)
         return this.$toasted.global.warn("please enter the username");
+      if (!this.form.register.email)
+        return this.$toasted.global.warn("please enter your email address");
       if (!this.form.register.rePassword)
         return this.$toasted.global.warn("please repeat the password");
       if (!this.form.register.name)

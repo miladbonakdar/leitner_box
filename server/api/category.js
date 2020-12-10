@@ -64,7 +64,11 @@ router.get('/list/:size/:page', auth, checkAsync(async (req, res) => {
     const search = req.query.search && req.query.search.toLowerCase()
     const [cats, total] = await Promise.all([
         CategoryModel.find({
-            ...(search && {name: {$regex: search, $options: 'i'}})
+            ...(search && {name: {$regex: search, $options: 'i'}}),
+            $or: [
+                {'isPrivate': false},
+                {'creator': req.user.id}
+            ]
         }, {}, {skip: size * page, limit: size}).populate('creator',
             {
                 name: true,
@@ -85,6 +89,10 @@ router.get('/list/:size/:page', auth, checkAsync(async (req, res) => {
 }))
 
 router.get('/my-categories', auth, checkAsync(async (req, res) => {
+    const user = (await User.findById(req.user.id, {
+        selectedCategories: true
+    })).toJSON()
+
     const categories = await CategoryModel.find({
         creator: req.user.id
     }).populate('creator',
@@ -95,7 +103,15 @@ router.get('/my-categories', auth, checkAsync(async (req, res) => {
             id: true,
             _id: true
         }).sort('-createdAt')
-    res.success(categories)
+    const items = []
+    for (const category of categories) {
+        items.push({
+            ...category.toJSON(),
+            learning: user.selectedCategories.some(s => s.toString() === category.id.toString())
+        })
+    }
+
+    res.success(items)
 }))
 
 
@@ -110,16 +126,28 @@ router.get('/suggestions/:size/:page/:lang', auth, checkAsync(async (req, res) =
         _id: {$nin: ignoreList},
         ...(search && {name: {$regex: search, $options: "i"}}),
         ...(lang && {language: {$regex: lang, $options: "i"}}),
+        $or: [
+            {isPrivate: false},
+            {creator: req.user.id}
+        ]
     }
-    const [cards, total] = await Promise.all([
+    const [categories, total] = await Promise.all([
         CategoryModel.find(query, {}, {
             skip: size * page,
             limit: size
         }),
         CategoryModel.countDocuments(query)])
+    const catCardsCount = await Promise.all(categories.map(c => CardModel.countDocuments({'category.id' : c.id.toString()}).exec()))
+
+    const cats = categories.map(c => {
+        return {
+            ...c.toJSON(),
+            cards : catCardsCount.shift()
+        }
+    })
 
     res.success({
-        cards,
+        categories : cats,
         total,
         page,
         size
@@ -138,6 +166,8 @@ router.get('/:id', auth, checkAsync(async (req, res) => {
             })
     if (!cat)
         return res.notFound()
+    if (cat.isPrivate && cat.creator !== req.user.id)
+        return res.accessDenied('You cannot access this category')
 
     const catJson = cat.toJSON()
     const cards = await CardModel.find({
@@ -222,5 +252,25 @@ router.patch('/rate/:catId/:rate', auth, checkAsync(async (req, res) => {
     await cat.save()
     res.success(cat.toJSON())
 }))
+
+router.patch('/make-public/:catId', auth, checkAsync(async (req, res) => {
+    if (!req.user.isAdmin)
+        return res.accessDenied("only the admin can make a category public")
+    await changeCategoryStatus(res, req.params.catId, false)
+}))
+
+router.patch('/make-private/:catId', auth, checkAsync(async (req, res) => {
+    if (!req.user.isAdmin)
+        return res.accessDenied("only the admin can make a category private")
+    await changeCategoryStatus(res, req.params.catId, true)
+}))
+
+async function changeCategoryStatus(res, catId, status) {
+    const cat = await CategoryModel.findById(catId)
+    if (!cat) return res.notFound('category cannot be found')
+    cat.isPrivate = status
+    await cat.save()
+    res.success(cat.toJSON())
+}
 
 module.exports = router

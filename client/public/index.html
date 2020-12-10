@@ -16,10 +16,11 @@
 <!-- built files will be auto injected -->
 <script>
     window.addEventListener('load', () => {
-        let selectedVoice = window.speechSynthesis.getVoices().filter(v => v.voiceURI === 'Google UK English Female')[0];
+        let savedVoice = localStorage.getItem('saved_voice') || 'Google UK English Female'
+        let selectedVoice = window.speechSynthesis.getVoices().filter(v => v.voiceURI === savedVoice)[0];
 
         function loadVoice() {
-            selectedVoice = window.speechSynthesis.getVoices().filter(v => v.voiceURI === 'Google UK English Female')[0];
+            selectedVoice = window.speechSynthesis.getVoices().filter(v => v.voiceURI === savedVoice)[0];
         }
 
         window.toSpeech = function (text, rate = 1) {
@@ -34,6 +35,11 @@
             msg.rate = rate;
             msg.pitch = 0;
             window.speechSynthesis.speak(msg);
+        }
+
+        window.selectVoice = function (voiceUri) {
+            selectedVoice = window.speechSynthesis.getVoices().filter(v => v.voiceURI === voiceUri)[0]
+            localStorage.setItem('saved_voice', voiceUri)
         }
     })
 </script>

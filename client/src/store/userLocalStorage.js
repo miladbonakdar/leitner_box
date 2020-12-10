@@ -2,11 +2,16 @@ const userKey = "application_user";
 const userTokenKey = "application_user_token";
 const zeroCardsKey = "zero_cards_Key";
 const zeroCardsFinalizedKey = "zero_cards_selection_finalized_Key";
+const savedVoice = "saved_voice";
 
 export function getUser() {
   const data = localStorage.getItem(userKey);
   if (!data) return null;
   return JSON.parse(data);
+}
+
+export function getSelectedVoice() {
+  return localStorage.getItem(savedVoice) || 'Google UK English Female';
 }
 
 export function storeUserToken(user, token) {
