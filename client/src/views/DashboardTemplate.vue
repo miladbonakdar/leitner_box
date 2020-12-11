@@ -13,6 +13,9 @@
           <b-nav-item to="cards">
             <span class="text-white">Cards</span>
           </b-nav-item>
+          <b-nav-item to="categories">
+            <span class="text-white">Categories</span>
+          </b-nav-item>
           <b-nav-item to="suggest">
             <span class="text-white">Suggestions</span>
           </b-nav-item>

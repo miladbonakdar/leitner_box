@@ -4,6 +4,7 @@ const {checkAsync} = require('./utils/checkApifunctions')
 const path = require('path');
 const fs = require('fs');
 const languages = require('../models/languages.enum');
+const types = require('../models/cardTypes.enum');
 
 router.get('/sound/:sound', checkAsync(async (req, res) => {
     const sound = req.params.sound
@@ -21,6 +22,10 @@ router.get('/sound/:sound', checkAsync(async (req, res) => {
 
 router.get('/languages', checkAsync(async (_, res) => {
     res.success(languages)
+}))
+
+router.get('/card-types', checkAsync(async (_, res) => {
+    res.success(types)
 }))
 
 module.exports = router

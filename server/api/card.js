@@ -120,7 +120,8 @@ router.get('/list/:size/:page', auth, checkAsync(async (req, res) => {
     const search = req.query.search && req.query.search.toLowerCase()
     const [cards, total] = await Promise.all([
         CardModel.find({
-            ...(search && {front: {$regex: search, $options: "i"}})
+            ...(search && {front: {$regex: search, $options: "i"}}),
+            creator: req.user.id
         }, {}, {skip: size * page, limit: size}).populate('creator', {
             name: true,
             isAdmin: true,

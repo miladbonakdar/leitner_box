@@ -2,6 +2,7 @@ import Vue from "vue";
 import VueRouter from "vue-router";
 import DashboardTemplate from "../views/DashboardTemplate";
 import CardsView from "../views/CardsView";
+import CategoriesView from "../views/CategoriesView";
 import AuthView from "../views/AuthView";
 import ProfileView from "../views/ProfileView";
 import SessionView from "../views/SessionView";
@@ -27,6 +28,11 @@ const routes = [
         path: "cards",
         component: CardsView,
         name: "Cards"
+      },
+      {
+        path: "categories",
+        component: CategoriesView,
+        name: "Categories"
       },
       {
         path: "suggest",

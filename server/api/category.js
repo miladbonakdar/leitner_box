@@ -36,7 +36,8 @@ router.put('/', auth, checkAsync(async (req, res) => {
         return res.badRequest('public category cannot be updated')
     await CategoryModel.updateOne({_id: req.body.id}, {
         $set: {
-            name: req.body.name
+            name: req.body.name,
+            description :req.body.description
         }
     }).exec()
     res.json(cat)
@@ -65,10 +66,7 @@ router.get('/list/:size/:page', auth, checkAsync(async (req, res) => {
     const [cats, total] = await Promise.all([
         CategoryModel.find({
             ...(search && {name: {$regex: search, $options: 'i'}}),
-            $or: [
-                {'isPrivate': false},
-                {'creator': req.user.id}
-            ]
+            creator: req.user.id
         }, {}, {skip: size * page, limit: size}).populate('creator',
             {
                 name: true,
@@ -81,7 +79,7 @@ router.get('/list/:size/:page', auth, checkAsync(async (req, res) => {
             ...(search && {name: {$regex: search, $options: "i"}})
         })])
     res.success({
-        cats,
+        categories: cats,
         total,
         page,
         size
@@ -137,17 +135,17 @@ router.get('/suggestions/:size/:page/:lang', auth, checkAsync(async (req, res) =
             limit: size
         }),
         CategoryModel.countDocuments(query)])
-    const catCardsCount = await Promise.all(categories.map(c => CardModel.countDocuments({'category.id' : c.id.toString()}).exec()))
+    const catCardsCount = await Promise.all(categories.map(c => CardModel.countDocuments({'category.id': c.id.toString()}).exec()))
 
     const cats = categories.map(c => {
         return {
             ...c.toJSON(),
-            cards : catCardsCount.shift()
+            cards: catCardsCount.shift()
         }
     })
 
     res.success({
-        categories : cats,
+        categories: cats,
         total,
         page,
         size

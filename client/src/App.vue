@@ -58,6 +58,18 @@ input.form-control + span {
   opacity: 0.6;
 }
 
+.font-14{
+  font-size: 14px;
+}
+.font-12{
+  font-size: 12px;
+}
+.font-10{
+  font-size: 10px;
+}
+.font-8{
+  font-size: 8px;
+}
 .pointer {
   cursor: pointer;
 }

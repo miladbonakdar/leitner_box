@@ -15,6 +15,7 @@ let categorySchema = new Schema({
         }
     },
     isPrivate: {type: Boolean, required: true, default: true},
+    description: {type: String},
     creator: {type: Schema.Types.ObjectID, required: true, ref: 'user'},
     createdAt: {type: Date, default: Date.now},
     rating : [{

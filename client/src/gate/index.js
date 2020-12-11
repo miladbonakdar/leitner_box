@@ -109,6 +109,10 @@ export function getLanguages() {
     return instance.get(`/api-v1/public/languages`);
 }
 
+export function getCardTypes() {
+    return instance.get(`/api-v1/public/card-types`);
+}
+
 export function createCategory(data) {
     return instance.post(`/api-v1/category/`, data);
 }
